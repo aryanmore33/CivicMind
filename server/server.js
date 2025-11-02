@@ -1,103 +1,85 @@
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
-const bodyParser = require('body-parser');
 const cors = require('cors');
-const { Server } = require('socket.io');
-const morgan = require('morgan');
-const { jwtAuthMiddleware } = require('./middlewares/jwtAuthMiddleware');
+const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const morgan = require('morgan');
+const { Server } = require('socket.io');
+
+// Middleware
+const { jwtAuthMiddleware } = require('./middlewares/jwtAuthMiddleware');
+
+// Socket handlers
 const { initSocketHandlers } = require('./utils/socket');
-require('./utils/autoUpdateExamStatus'); // For auto-updating past exams status
-require('./utils/autoliveExamStatus'); // For auto-updating live status
 
-// Import Routes
+// Routes
 const userRoutes = require('./routes/userRoutes');
-const examRoutes = require('./routes/examRoutes');
-const questionsRoutes = require('./routes/questionRoutes');
+const complaintRoutes = require('./routes/complaintRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 
+// Error Handler
+const { errorHandler } = require('./middlewares/errorHandler');
 
-// Initialize the app
 const app = express();
 const server = http.createServer(app);
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5000;
 
-const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+// ✅ Environment-based HOST
+const HOST =
+  process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
 
-// Function to get origins from environment variables
-const getOriginsFromEnv = (envVar) =>
-  process.env[envVar]?.split(',').map(origin => origin.trim()) || [];
+// ✅ Dynamic origins
+const getOriginsFromEnv = (envKey) =>
+  process.env[envKey]?.split(',').map(o => o.trim()) || [];
 
 const FRONTEND_ORIGIN =
   process.env.NODE_ENV === 'production'
     ? getOriginsFromEnv('FRONTEND_ORIGIN_PROD')
     : getOriginsFromEnv('FRONTEND_ORIGIN_DEV');
 
-
 const io = new Server(server, {
-  cookie: true,
   cors: {
-    origin: FRONTEND_ORIGIN, // Allow frontend origin
-    methods: ['GET', 'POST'], // Specify HTTP methods
-    credentials: true, // Allow credentials (cookies)
+    origin: FRONTEND_ORIGIN,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
   },
 });
 
-// Middlewares
+// ✅ Middlewares
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: FRONTEND_ORIGIN, // Update this to your frontend URL deployed on Render
-    credentials: true, // Allow cookies to be sent
-  })
-);
-
+app.use(cors({
+  origin: FRONTEND_ORIGIN,
+  credentials: true,
+}));
 app.use(express.json());
 app.use(bodyParser.json());
-
-app.use(express.urlencoded({ extended: true })); // Handle form-data requests properly
-
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
-app.use(express.urlencoded({ extended: false }));
-// app.use("/uploads", express.static(path.resolve("./uploads")));
 
-// Routes
-app.use('/api/users', userRoutes, fileRoutes);
-app.use('/api/token', tokenRoutes);
-app.use('/api/exams', jwtAuthMiddleware, examRoutes, fileRoutes);
+// ✅ Static folder for complaint images
+// app.use("/uploads", express.static("./uploads"));
 
+// ✅ Routes
+app.use('/api/users', userRoutes);
+app.use('/api/complaints', jwtAuthMiddleware, complaintRoutes);
+app.use('/api/categories', jwtAuthMiddleware, categoryRoutes);
 
-const start_exam = io.of('/exams/start-exam');
-
-// Initialize Socket.IO handlers
-initSocketHandlers(start_exam);
-
-// Ensure a response for the root route
+// ✅ Root route checker
 app.get('/', (req, res) => {
-  res.send('Server is running!'); // Generic message for Render health checks
+  res.send('CivicMind Backend Running ✅');
 });
 
-app.get('/api/security/stats', jwtAuthMiddleware, async (req, res) => {
-  try {
-    const stats = await ipGuardianService.getStats();
-    res.json({
-      success: true,
-      data: stats
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
+// ✅ Socket namespace for real-time status/notifications
+const civicmind_socket = io.of('/complaints/updates');
+initSocketHandlers(civicmind_socket);
 
-
-// Centralized error handling middleware
+// ✅ Error handler (must be last)
 app.use(errorHandler);
 
-server.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+// ✅ Start server
+server.listen(PORT, HOST, () => {
+  console.log(`✅ Server running at http://${HOST}:${PORT}`);
 });
 
 module.exports = app;
