@@ -19,7 +19,7 @@ const complaintRoutes = require('./routes/complaintRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 
 // Error Handler
-const { errorHandler } = require('./middlewares/errorHandler');
+const { errorHandler } = require('./middlewares/errorHandler.js');
 
 const app = express();
 const server = http.createServer(app);
@@ -61,9 +61,9 @@ app.use(morgan('dev'));
 // app.use("/uploads", express.static("./uploads"));
 
 // ✅ Routes
-app.use('/api/users', userRoutes);
-app.use('/api/complaints', jwtAuthMiddleware, complaintRoutes);
-app.use('/api/categories', jwtAuthMiddleware, categoryRoutes);
+// app.use('/api/users', userRoutes);
+// app.use('/api/complaints', jwtAuthMiddleware, complaintRoutes);
+// app.use('/api/categories', jwtAuthMiddleware, categoryRoutes);
 
 // ✅ Root route checker
 app.get('/', (req, res) => {
@@ -71,11 +71,11 @@ app.get('/', (req, res) => {
 });
 
 // ✅ Socket namespace for real-time status/notifications
-const civicmind_socket = io.of('/complaints/updates');
-initSocketHandlers(civicmind_socket);
+// const civicmind_socket = io.of('/complaints/updates');
+// initSocketHandlers(civicmind_socket);
 
 // ✅ Error handler (must be last)
-app.use(errorHandler);
+// app.use(errorHandler);
 
 // ✅ Start server
 server.listen(PORT, HOST, () => {
