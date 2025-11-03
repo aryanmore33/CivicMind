@@ -43,20 +43,33 @@ CREATE TABLE categories (
 
 -- ==============================
 -- TABLE: complaints
+-- (category_id REMOVED)
 -- ==============================
 CREATE TABLE complaints (
     complaint_id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
-    category_id INT REFERENCES categories(category_id),  -- set later by user or AI
     title VARCHAR(200) NOT NULL,
     description TEXT,
     image_url TEXT,
     latitude NUMERIC(10,6),
     longitude NUMERIC(10,6),
-    address TEXT, -- manual or auto-detected
+    address TEXT,
     status complaint_status NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
+);
+
+
+-- ==============================
+-- NEW TABLE: complaint_categories
+-- (link complaints ↔ categories)
+-- ==============================
+CREATE TABLE complaint_categories (
+    id SERIAL PRIMARY KEY,
+    complaint_id INT REFERENCES complaints(complaint_id) ON DELETE CASCADE,
+    category_id INT REFERENCES categories(category_id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (complaint_id, category_id)
 );
 
 
@@ -68,7 +81,7 @@ CREATE TABLE interactions (
     complaint_id INT REFERENCES complaints(complaint_id) ON DELETE CASCADE,
     user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
     type interaction_type NOT NULL,
-    comment_text TEXT,            -- only for comments
+    comment_text TEXT,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -80,7 +93,6 @@ WHERE type = 'like';
 
 -- ==============================
 -- TABLE: notifications
--- sends notification when complaint is solved or updated
 -- ==============================
 CREATE TABLE notifications (
     notification_id SERIAL PRIMARY KEY,
@@ -94,15 +106,15 @@ CREATE TABLE notifications (
 
 -- ==============================
 -- TABLE: admin_logs
--- for authority/admin activity tracking
 -- ==============================
 CREATE TABLE admin_logs (
     log_id SERIAL PRIMARY KEY,
     authority_id INT REFERENCES users(user_id) ON DELETE CASCADE,
     complaint_id INT REFERENCES complaints(complaint_id),
-    action VARCHAR(200),   -- e.g., "status changed to resolved"
+    action VARCHAR(200),
     created_at TIMESTAMP DEFAULT NOW()
 );
+
 
 `;
 

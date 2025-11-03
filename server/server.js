@@ -10,13 +10,14 @@ const { Server } = require('socket.io');
 // Middleware
 const { jwtAuthMiddleware } = require('./middlewares/jwtAuthMiddleware');
 
+
 // Socket handlers
 const { initSocketHandlers } = require('./utils/socket');
 
 // Routes
 const userRoutes = require('./routes/userRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
-const categoryRoutes = require('./routes/categoryRoutes');
+const categoryRoutes = require('./routes/categoryRoutes.js');
 
 // Error Handler
 const { errorHandler } = require('./middlewares/errorHandler.js');
@@ -57,13 +58,15 @@ app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
+
 // ✅ Static folder for complaint images
 // app.use("/uploads", express.static("./uploads"));
 
 // ✅ Routes
 app.use('/api/users', userRoutes);
-// app.use('/api/complaints', jwtAuthMiddleware, complaintRoutes);
-// app.use('/api/categories', jwtAuthMiddleware, categoryRoutes);
+app.use("/uploads", express.static("./uploads"));
+app.use('/api/complaints', complaintRoutes);
+app.use('/api/categories', jwtAuthMiddleware, categoryRoutes);
 
 // ✅ Root route checker
 app.get('/', (req, res) => {
