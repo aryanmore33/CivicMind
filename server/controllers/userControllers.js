@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 
-dotenv.config();
+// dotenv.config();
 
 const registerUser = async (req, res) => {
   const { name, email, password, phone_number, city, role } = req.body;
@@ -71,9 +71,6 @@ const registerUser = async (req, res) => {
   }
 };
 
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const userModel = require('../models/userModel');
 
 // Login User Controller
 const loginUser = async (req, res) => {
