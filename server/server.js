@@ -61,7 +61,7 @@ app.use(morgan('dev'));
 // app.use("/uploads", express.static("./uploads"));
 
 // ✅ Routes
-// app.use('/api/users', userRoutes);
+app.use('/api/users', userRoutes);
 // app.use('/api/complaints', jwtAuthMiddleware, complaintRoutes);
 // app.use('/api/categories', jwtAuthMiddleware, categoryRoutes);
 
