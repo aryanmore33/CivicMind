@@ -1,18 +1,77 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { LogIn, Mail, Lock } from "lucide-react";
+import { toast } from "sonner";
+import axios from "axios";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!email.trim()) newErrors.email = "Email is required";
+    if (!password) newErrors.password = "Password is required";
+    if (password.length < 6) newErrors.password = "Password must be at least 6 characters";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login:", { email, password });
+
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      // ✅ Use import.meta.env for React
+      const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:4000";
+
+      console.log("🔍 API_BASE_URL:", API_BASE_URL);
+      console.log("📡 Making request to:", `${API_BASE_URL}/api/users/login`);
+
+      const response = await axios.post(`${API_BASE_URL}/api/users/login`, {
+        email,
+        password,
+      });
+
+      console.log("✅ Login successful:", response.data);
+
+      // Save token and user to localStorage
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+      }
+
+      toast.success("Login successful! Redirecting...");
+
+      // Redirect based on user role
+      const userRole = response.data.user?.role;
+      setTimeout(() => {
+        if (userRole === "authority") {
+          navigate("/authority");
+        } else {
+          navigate("/dashboard");
+        }
+      }, 1500);
+
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || "Login failed. Please try again.";
+      toast.error(errorMessage);
+      console.error("Login error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -27,6 +86,7 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Email Field */}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <div className="relative">
@@ -37,12 +97,14 @@ const Login = () => {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="pl-10"
+                className={`pl-10 ${errors.email ? "border-red-500" : ""}`}
                 required
               />
             </div>
+            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
           </div>
 
+          {/* Password Field */}
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <div className="relative">
@@ -53,10 +115,11 @@ const Login = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10"
+                className={`pl-10 ${errors.password ? "border-red-500" : ""}`}
                 required
               />
             </div>
+            {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
           </div>
 
           <div className="flex items-center justify-between text-sm">
@@ -65,8 +128,13 @@ const Login = () => {
             </Link>
           </div>
 
-          <Button type="submit" className="w-full">
-            Sign In
+          {/* Submit Button */}
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={loading}
+          >
+            {loading ? "Signing In..." : "Sign In"}
           </Button>
         </form>
 

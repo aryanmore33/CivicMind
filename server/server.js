@@ -20,7 +20,7 @@ const complaintRoutes = require('./routes/complaintRoutes');
 const categoryRoutes = require('./routes/categoryRoutes.js');
 
 // Error Handler
-const { errorHandler } = require('./middlewares/errorHandler.js');
+const errorHandler = require('./middlewares/errorHandler.js');
 
 const app = express();
 const server = http.createServer(app);
@@ -50,9 +50,14 @@ const io = new Server(server, {
 // ✅ Middlewares
 app.use(cookieParser());
 app.use(cors({
-  origin: FRONTEND_ORIGIN,
+  origin: ['http://localhost:8080', 'http://localhost:3000'],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// app.options('*', cors());
+
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
@@ -78,7 +83,7 @@ app.get('/', (req, res) => {
 // initSocketHandlers(civicmind_socket);
 
 // ✅ Error handler (must be last)
-// app.use(errorHandler);
+app.use(errorHandler);
 
 // ✅ Start server
 server.listen(PORT, HOST, () => {
