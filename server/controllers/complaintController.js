@@ -251,6 +251,49 @@ const getComplaintsByStatus = async (req, res) => {
   }
 };
 
+const getDashboardComplaints = async (req, res) => {
+  try {
+    console.log("📊 Fetching dashboard complaints for authority...");
+
+    // ✅ Get all complaints with categories
+    const complaints = await complaintModel.getAllComplaints();
+
+    if (!complaints) {
+      return res.status(200).json({
+        success: true,
+        complaints: [],
+        stats: {
+          total: 0,
+          pending: 0,
+          in_progress: 0,
+          resolved: 0,
+          high_priority: 0,
+        },
+      });
+    }
+
+    // ✅ Calculate statistics
+    const stats = {
+      total: complaints.length,
+      pending: complaints.filter((c) => c.status === "pending").length,
+      in_progress: complaints.filter((c) => c.status === "in_progress").length,
+      resolved: complaints.filter((c) => c.status === "resolved").length,
+      high_priority: complaints.filter((c) => c.likes > 20).length,
+    };
+
+    console.log("✅ Dashboard stats:", stats);
+
+    return res.status(200).json({
+      success: true,
+      complaints,
+      stats,
+    });
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    return res.status(500).json({ error: "Failed to fetch dashboard" });
+  }
+};
+
 module.exports = {
   createComplaint,
   getAllComplaints,
@@ -260,4 +303,5 @@ module.exports = {
   deleteComplaint,
   getComplaintsByCategory,
   getComplaintsByStatus,
+  getDashboardComplaints, // ✅ Add this
 };

@@ -446,14 +446,14 @@ const ComplaintDetail = () => {
             </Card>
 
             {/* Action Button */}
-            <Button 
+            {/* <Button 
               className="w-full" 
               size="lg"
               onClick={handleMarkResolved}
               disabled={complaint.status === "solved"}
             >
               {complaint.status === "solved" ? "✓ Resolved" : "Mark as Resolved"}
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>

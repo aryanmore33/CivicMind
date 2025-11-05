@@ -8,6 +8,7 @@ const {
   deleteComplaint,
   getComplaintsByCategory,
   getComplaintsByStatus,
+  getDashboardComplaints
 } = require('../controllers/complaintController');
 const { jwtAuthMiddleware, authorityOnly } = require('../middlewares/jwtAuthMiddleware');
 const upload = require('../middlewares/uploadComplaint');
@@ -31,5 +32,6 @@ router.put('/:complaintId/status', jwtAuthMiddleware, authorityOnly, updateCompl
 
 // ✅ DELETE
 router.delete('/:complaintId', jwtAuthMiddleware, deleteComplaint); // ✅ Changed
+router.get('/authority/dashboard', jwtAuthMiddleware, authorityOnly, getDashboardComplaints);
 
 module.exports = router;
