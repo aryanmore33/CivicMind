@@ -4,17 +4,22 @@ import { Clock, PlayCircle, CheckCircle, XCircle } from "lucide-react";
 export type ComplaintStatus = "pending" | "in-progress" | "solved" | "rejected";
 
 interface StatusBadgeProps {
-  status: ComplaintStatus;
+  status?: ComplaintStatus | string;
   className?: string;
 }
 
-const statusConfig = {
+const statusConfig: Record<string, any> = {
   pending: {
     label: "Pending",
     icon: Clock,
     className: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400",
   },
   "in-progress": {
+    label: "In Progress",
+    icon: PlayCircle,
+    className: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400",
+  },
+  in_progress: {  // ✅ Backend uses underscore!
     label: "In Progress",
     icon: PlayCircle,
     className: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400",
@@ -31,8 +36,15 @@ const statusConfig = {
   },
 };
 
-export const StatusBadge = ({ status, className }: StatusBadgeProps) => {
-  const config = statusConfig[status];
+const defaultConfig = {
+  label: "Pending",
+  icon: Clock,
+  className: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400",
+};
+
+export const StatusBadge = ({ status = "pending", className }: StatusBadgeProps) => {
+  const normalizedStatus = String(status || "pending").toLowerCase().trim();
+  const config = statusConfig[normalizedStatus] || defaultConfig;
   const Icon = config.icon;
 
   return (

@@ -14,28 +14,22 @@ const upload = require('../middlewares/uploadComplaint');
 
 const router = express.Router();
 
-// ✅ POST /api/complaints - Create new complaint (with image upload)
+// ✅ POST /api/complaints - Create new complaint
 router.post('/', jwtAuthMiddleware, upload.single('image'), createComplaint);
 
-// ✅ GET /api/complaints - Get all complaints
-router.get('/', jwtAuthMiddleware, getAllComplaints);
-
-// ✅ GET /api/complaints/my - Get logged-in user's complaints
+// ✅ SPECIFIC ROUTES FIRST
 router.get('/my', jwtAuthMiddleware, getMyComplaints);
-
-// ✅ GET /api/complaints/category/:category_id - Get complaints by category
 router.get('/category/:category_id', jwtAuthMiddleware, getComplaintsByCategory);
-
-// ✅ GET /api/complaints/status/:status - Get complaints by status
 router.get('/status/:status', jwtAuthMiddleware, getComplaintsByStatus);
 
-// ✅ GET /api/complaints/:id - Get single complaint
-router.get('/:id', jwtAuthMiddleware, getComplaintById);
+// ✅ GENERIC ROUTES LAST
+router.get('/', jwtAuthMiddleware, getAllComplaints);
+router.get('/:complaintId', jwtAuthMiddleware, getComplaintById); // ✅ Changed from :id
 
-// ✅ PUT /api/complaints/:id/status - Update complaint status (Authority only)
-router.put('/:id/status', jwtAuthMiddleware,authorityOnly, updateComplaintStatus);
+// ✅ PUT - Update status
+router.put('/:complaintId/status', jwtAuthMiddleware, authorityOnly, updateComplaintStatus); // ✅ Changed
 
-// ✅ DELETE /api/complaints/:id - Delete complaint
-router.delete('/:id', jwtAuthMiddleware, deleteComplaint);
+// ✅ DELETE
+router.delete('/:complaintId', jwtAuthMiddleware, deleteComplaint); // ✅ Changed
 
 module.exports = router;

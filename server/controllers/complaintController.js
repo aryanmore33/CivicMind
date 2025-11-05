@@ -8,20 +8,17 @@ const createComplaint = async (req, res) => {
     const { title, description, latitude, longitude, address } = req.body;
     const user_id = req.user.userId;
 
-    // Validation
     if (!title || !description) {
       return res.status(400).json({ 
         error: 'Title and description are required' 
       });
     }
 
-    // Get image URL if uploaded
     let image_url = null;
     if (req.file) {
       image_url = `/uploads/complaints/${req.file.filename}`;
     }
 
-    // ✅ STEP 1: Create complaint first (without categories)
     console.log('Creating complaint...');
     const newComplaint = await complaintModel.createComplaint(
       user_id,
@@ -35,14 +32,12 @@ const createComplaint = async (req, res) => {
 
     console.log(`Complaint created with ID: ${newComplaint.complaint_id}`);
 
-    // ✅ STEP 2: AI detects and creates categories
     console.log('Detecting categories with AI...');
     const detectedCategories = await detectCategoriesWithAI(title, description);
     
     console.log(`AI detected ${detectedCategories.length} categories:`, 
                 detectedCategories.map(c => c.category_name).join(', '));
 
-    // ✅ STEP 3: Link complaint to all detected categories
     for (const category of detectedCategories) {
       await complaintModel.assignCategory(
         newComplaint.complaint_id, 
@@ -51,7 +46,6 @@ const createComplaint = async (req, res) => {
       console.log(`Linked to category: ${category.category_name}`);
     }
 
-    // ✅ STEP 4: Fetch complete complaint with categories
     const complaintWithCategories = await complaintModel.getComplaintById(
       newComplaint.complaint_id
     );
@@ -98,12 +92,12 @@ const getAllComplaints = async (req, res) => {
   }
 };
 
-// ✅ GET COMPLAINT BY ID
+// ✅ GET COMPLAINT BY ID - FIX: Use complaintId not id
 const getComplaintById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { complaintId } = req.params; // ✅ Fixed
 
-    const complaint = await complaintModel.getComplaintById(id);
+    const complaint = await complaintModel.getComplaintById(complaintId); // ✅ Fixed
 
     if (!complaint) {
       return res.status(404).json({ error: 'Complaint not found' });
@@ -139,20 +133,19 @@ const getMyComplaints = async (req, res) => {
   }
 };
 
-// ✅ UPDATE COMPLAINT STATUS (Authority only)
+// ✅ UPDATE COMPLAINT STATUS - FIX: Use complaintId not id
 const updateComplaintStatus = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { complaintId } = req.params; // ✅ Fixed
+
     const { status } = req.body;
 
-    // Check if user is authority/admin
     if (req.user.role !== 'authority' && req.user.role !== 'admin') {
       return res.status(403).json({ 
         error: 'Access denied. Authorities only.' 
       });
     }
 
-    // Validate status
     const validStatuses = ['pending', 'in_progress', 'resolved'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ 
@@ -160,14 +153,13 @@ const updateComplaintStatus = async (req, res) => {
       });
     }
 
-    const updatedComplaint = await complaintModel.updateComplaintStatus(id, status);
+    const updatedComplaint = await complaintModel.updateComplaintStatus(complaintId, status); // ✅ Fixed
 
     if (!updatedComplaint) {
       return res.status(404).json({ error: 'Complaint not found' });
     }
 
-    // Fetch complete complaint with categories
-    const complaintWithDetails = await complaintModel.getComplaintById(id);
+    const complaintWithDetails = await complaintModel.getComplaintById(complaintId); // ✅ Fixed
 
     return res.status(200).json({
       message: 'Complaint status updated successfully',
@@ -180,32 +172,30 @@ const updateComplaintStatus = async (req, res) => {
   }
 };
 
-// ✅ DELETE COMPLAINT (User who created it or admin)
+// ✅ DELETE COMPLAINT - FIX: Use complaintId not id
 const deleteComplaint = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { complaintId } = req.params; // ✅ Fixed
     const user_id = req.user.userId;
     const user_role = req.user.role;
 
-    // Get complaint to check ownership
-    const complaint = await complaintModel.getComplaintById(id);
+    const complaint = await complaintModel.getComplaintById(complaintId); // ✅ Fixed
 
     if (!complaint) {
       return res.status(404).json({ error: 'Complaint not found' });
     }
 
-    // Check if user owns the complaint or is admin
     if (complaint.user_id !== user_id && user_role !== 'admin') {
       return res.status(403).json({ 
         error: 'Access denied. You can only delete your own complaints.' 
       });
     }
 
-    await complaintModel.deleteComplaint(id);
+    await complaintModel.deleteComplaint(complaintId); // ✅ Fixed
 
     return res.status(200).json({
       message: 'Complaint deleted successfully',
-      deleted_complaint_id: id
+      deleted_complaint_id: complaintId // ✅ Fixed
     });
 
   } catch (error) {
@@ -239,7 +229,6 @@ const getComplaintsByStatus = async (req, res) => {
   try {
     const { status } = req.params;
 
-    // Validate status
     const validStatuses = ['pending', 'in_progress', 'resolved'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ 

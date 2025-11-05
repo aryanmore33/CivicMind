@@ -18,7 +18,7 @@ export type ComplaintCategory =
   | "other";
 
 interface CategoryIconProps {
-  category: ComplaintCategory;
+  category?: ComplaintCategory | string;
   className?: string;
 }
 
@@ -32,15 +32,25 @@ const categoryConfig = {
   other: { icon: MoreHorizontal, color: "text-gray-600" },
 };
 
-export const CategoryIcon = ({ category, className = "w-5 h-5" }: CategoryIconProps) => {
-  const config = categoryConfig[category];
+// Default fallback config
+const defaultConfig = { 
+  icon: MoreHorizontal, 
+  color: "text-gray-600" 
+};
+
+export const CategoryIcon = ({ 
+  category = "other", 
+  className = "w-5 h-5" 
+}: CategoryIconProps) => {
+  // ✅ Add fallback - use default if category not found
+  const config = categoryConfig[category as keyof typeof categoryConfig] || defaultConfig;
   const Icon = config.icon;
 
   return <Icon className={`${config.color} ${className}`} />;
 };
 
-export const getCategoryLabel = (category: ComplaintCategory): string => {
-  const labels: Record<ComplaintCategory, string> = {
+export const getCategoryLabel = (category?: ComplaintCategory | string): string => {
+  const labels: Record<string, string> = {
     pothole: "Pothole",
     garbage: "Garbage",
     "water-leak": "Water Leak",
@@ -49,5 +59,6 @@ export const getCategoryLabel = (category: ComplaintCategory): string => {
     drainage: "Drainage",
     other: "Other",
   };
-  return labels[category];
+  // ✅ Return default if not found
+  return labels[category as string] || "Other";
 };

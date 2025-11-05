@@ -8,8 +8,7 @@ const morgan = require('morgan');
 const { Server } = require('socket.io');
 
 // Middleware
-const { jwtAuthMiddleware } = require('./middlewares/jwtAuthMiddleware');
-
+const { jwtAuthMiddleware } = require('./middlewares/jwtAuthMiddleware.js');
 
 // Socket handlers
 const { initSocketHandlers } = require('./utils/socket');
@@ -18,13 +17,14 @@ const { initSocketHandlers } = require('./utils/socket');
 const userRoutes = require('./routes/userRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 const categoryRoutes = require('./routes/categoryRoutes.js');
+const interactionRoutes = require('./routes/interactionRoutes.js');
 
 // Error Handler
 const errorHandler = require('./middlewares/errorHandler.js');
 
 const app = express();
 const server = http.createServer(app);
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000; // ✅ CHANGE FROM 5000 TO 4000
 
 // ✅ Environment-based HOST
 const HOST =
@@ -50,28 +50,25 @@ const io = new Server(server, {
 // ✅ Middlewares
 app.use(cookieParser());
 app.use(cors({
-  origin: ['http://localhost:8080', 'http://localhost:3000'],
+  origin: ['http://localhost:8080', 'http://localhost:3000', 'http://localhost:4000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-
-// app.options('*', cors());
 
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-
 // ✅ Static folder for complaint images
-// app.use("/uploads", express.static("./uploads"));
+app.use("/uploads", express.static("./uploads"));
 
 // ✅ Routes
 app.use('/api/users', userRoutes);
-app.use("/uploads", express.static("./uploads"));
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/categories', jwtAuthMiddleware, categoryRoutes);
+app.use('/api/interactions', interactionRoutes); // ✅ Routes WITH JWT middleware inside
 
 // ✅ Root route checker
 app.get('/', (req, res) => {
